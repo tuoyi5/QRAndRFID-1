@@ -27,7 +27,7 @@ ext {
     minSdkVersion = 19
     targetSdkVersion = 27
     compileSdkVersion = 27
-    buildToolsVersion = '27.0.3'
+    buildToolsVersion = '30.0.2'
 
     rxandroid = '2.1.0'
     rxjava = '2.1.13'
