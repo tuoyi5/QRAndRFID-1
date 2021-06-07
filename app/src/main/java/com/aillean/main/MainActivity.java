@@ -15,12 +15,13 @@ import com.aillean.tool.DeviceType;
 import com.aillean.utils.EventBusUtils;
 import com.seuic.scanner.DecodeInfo;
 import com.seuic.scanner.DecodeInfoCallBack;
-import com.seuic.scanner.Scanner;
 import com.seuic.scanner.ScannerFactory;
+import com.seuic.scanner.Scanner;
 import com.seuic.sleduhf.UhfDevice;
 
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
+
 
 public class MainActivity extends AppCompatActivity implements DecodeInfoCallBack {
 
@@ -30,7 +31,6 @@ public class MainActivity extends AppCompatActivity implements DecodeInfoCallBac
     private Button btnRFID, btnQR;
 
     private Scanner scanner = null;
-
     private UhfDevice uhfDevice = null;
 
     @Override
@@ -68,8 +68,7 @@ public class MainActivity extends AppCompatActivity implements DecodeInfoCallBac
     public void onDecodeComplete(final DecodeInfo decodeInfo) {
         String strDecoder = decodeInfo.barcode;
     }
-
-
+    
     @Override
     public void onDestroy() {
         super.onDestroy();
