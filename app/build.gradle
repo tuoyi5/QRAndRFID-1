@@ -48,5 +48,4 @@ dependencies {
     implementation 'androidx.annotation:annotation:1.1.0'
     implementation files('libs/sleduhf-v1.0.3.jar')
     implementation files('libs/ScannerAPI.jar')
-    implementation files('libs/ScannerAPI.jar')
 }

@@ -68,7 +68,7 @@ public class MainActivity extends AppCompatActivity implements DecodeInfoCallBac
     public void onDecodeComplete(final DecodeInfo decodeInfo) {
         String strDecoder = decodeInfo.barcode;
     }
-    
+
     @Override
     public void onDestroy() {
         super.onDestroy();
