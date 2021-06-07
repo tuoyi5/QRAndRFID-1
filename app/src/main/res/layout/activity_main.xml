@@ -8,7 +8,13 @@
             android:id="@+id/textView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:ems="10"
+            android:textSize="25sp"
+            android:textColor="@color/black"
+            android:text="hello word"
+            android:gravity="center"
+            android:padding="10dp"
+            android:layout_marginTop="20dp"
+            android:background="@drawable/background_selected_text"
             android:layout_gravity="center_horizontal">
         </TextView>
         <EditText
@@ -16,7 +22,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            android:ems="10"
+            android:gravity="center"
+            android:textColor="@color/black"
+            android:ems="30"
             android:inputType="textPersonName"
             android:text="http://192.168.3.141:1444">
 
