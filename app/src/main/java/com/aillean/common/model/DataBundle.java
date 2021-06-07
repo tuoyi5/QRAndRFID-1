@@ -39,7 +39,15 @@ public class DataBundle {
 		mCloudDataManager = cloudDataManager;
 	}
 
-/*	public AilleanModel getAilleanModel() {
+	public EventBus getEventBus() {
+		return eventBus;
+	}
+
+	public void setEventBus(EventBus eventBus) {
+		this.eventBus = eventBus;
+	}
+
+	/*	public AilleanModel getAilleanModel() {
 		return ailleanModel;
 	}
 
