@@ -5,9 +5,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.aillean.common.eventbus.NetworkDataActionEvent;
 import com.aillean.common.eventbus.RecvWSEvent;
@@ -15,6 +19,7 @@ import com.aillean.common.eventbus.RfidActionEvent;
 import com.aillean.common.eventbus.RfidConnectInfoEvent;
 import com.aillean.common.eventbus.RfidTagEvent;
 import com.aillean.common.model.DataBundle;
+import com.aillean.tool.DeviceType;
 import com.aillean.utils.EventBusUtils;
 
 import org.greenrobot.eventbus.EventBus;
@@ -27,8 +32,9 @@ public class MainActivity extends AppCompatActivity{
     private DataBundle mDataBundle;
     private EditText ipPort;
     private TextView mTextView;
-    private Button btnRFID, btnQR;
-
+    private RadioButton btnRFID, btnQR;
+    private RadioGroup mRadioGroup;
+    private Button testButton;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,17 +44,36 @@ public class MainActivity extends AppCompatActivity{
         ipPort = this.findViewById(R.id.editTextTextIP);
         btnRFID = this.findViewById(R.id.buttonRFID);
         btnQR = this.findViewById(R.id.buttonQR);
+        testButton = this.findViewById(R.id.testButton);
+        mRadioGroup = this.findViewById(R.id.radio_group);
 
         btnRFID.setOnClickListener(v -> {
             mDataBundle.setIpProt(ipPort.getText().toString());
+            mDataBundle.setDeviceType(DeviceType.RFID);
         });
 
         btnQR.setOnClickListener(v -> {
             mDataBundle.setIpProt(ipPort.getText().toString());
+            mDataBundle.setDeviceType(DeviceType.QR);
+        });
+
+
+        testButton.setOnClickListener( v -> {
+            //测试rfid流程的入口
+            mDataBundle.startQrOrRfid();
         });
 
         registerModel();
         registerEventBus();
+    }
+
+    public void get(View view) {
+        for (int i = 0; i < mRadioGroup.getChildCount(); i++) {
+            RadioButton button = (RadioButton) mRadioGroup.getChildAt(i);
+            if (button.isChecked()) {
+                break;
+            }
+        }
     }
 
     @Override
@@ -71,7 +96,7 @@ public class MainActivity extends AppCompatActivity{
     }
 
     public void registerModel() {
-        mDataBundle = new DataBundle(getApplicationContext());
+        mDataBundle = new DataBundle(this);
     }
 
     public void unregisterModel() {
