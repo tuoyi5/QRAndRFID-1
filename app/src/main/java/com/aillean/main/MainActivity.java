@@ -41,6 +41,9 @@ public class MainActivity extends AppCompatActivity{
 
         btnRFID.setOnClickListener(v -> {
             mDataBundle.setIpProt(ipPort.getText().toString());
+
+            //测试rfid流程的入口
+            mDataBundle.getRfidDeviceModel().open();
         });
 
         btnQR.setOnClickListener(v -> {
@@ -71,7 +74,7 @@ public class MainActivity extends AppCompatActivity{
     }
 
     public void registerModel() {
-        mDataBundle = new DataBundle(getApplicationContext());
+        mDataBundle = new DataBundle(this);
     }
 
     public void unregisterModel() {
