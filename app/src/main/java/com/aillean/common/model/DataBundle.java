@@ -24,6 +24,7 @@ public class DataBundle {
 	private LocalDataManager mLocalDataManager;
 	private EventBus eventBus;
 	private String ipProt;
+	private DeviceType mDeviceType = DeviceType.RFID;
 
 	private QrDeviceModel mQrDeviceModel;
 	private RfidDeviceModel mRfidDeviceModel;
@@ -78,6 +79,14 @@ public class DataBundle {
 		this.ipProt = ipProt;
 	}
 
+	public DeviceType getDeviceType() {
+		return mDeviceType;
+	}
+
+	public void setDeviceType(DeviceType deviceType) {
+		mDeviceType = deviceType;
+	}
+
 	public void startQrAction(String qrCode) {
 		QrAction action = new QrAction(appContext, mLocalDataManager);
 		action.execute();
@@ -95,11 +104,27 @@ public class DataBundle {
 		action.execute();
 	}
 
+	public void startQrOrRfid() {
+		switch (mDeviceType) {
+			case RFID:
+				mRfidDeviceModel.open();
+				break;
+			case QR:
+				mQrDeviceModel.startScan();
+				break;
+		}
+	}
+
+	public void stopQrOrRfid() {
+		mRfidDeviceModel.close();
+		mQrDeviceModel.stopScan();
+	}
+
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
 		if (!entityKeys.contains(keyCode)) {
 			return false;
 		}
-		mQrDeviceModel.startScan();
+		startQrOrRfid();
 		return true;
 	}
 
@@ -108,7 +133,7 @@ public class DataBundle {
 			return false;
 		}
 
-		mQrDeviceModel.stopScan();
+		stopQrOrRfid();
 		return true;
 	}
 

@@ -95,7 +95,6 @@ public class RfidDeviceModel {
 	//需要通过binder连接蓝牙服务,故需要主线程中进行.
 	public void init( ){
 		registerUhfDeviceCallback();
-
 		BluetoothAdapter btAdapter = BluetoothAdapter.getDefaultAdapter();
 		if (!btAdapter.isEnabled()) {
 			eventBus.post(new RfidConnectInfoEvent().setMessage("蓝牙未启用"));
@@ -118,6 +117,7 @@ public class RfidDeviceModel {
 	}
 
 	public String open() {
+		registerUhfDeviceCallback();
 		btMc = RfidImpl.open(uhfDevice);
 		return btMc;
 	}
