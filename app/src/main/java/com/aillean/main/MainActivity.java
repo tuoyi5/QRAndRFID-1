@@ -4,47 +4,35 @@ import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import com.aillean.common.action.NetworkTestAction;
+import com.aillean.common.eventbus.NetworkDataActionEvent;
 import com.aillean.common.eventbus.RecvWSEvent;
+import com.aillean.common.eventbus.RfidActionEvent;
+import com.aillean.common.eventbus.RfidConnectInfoEvent;
+import com.aillean.common.eventbus.RfidTagEvent;
 import com.aillean.common.model.DataBundle;
-import com.aillean.tool.DeviceType;
 import com.aillean.utils.EventBusUtils;
-import com.seuic.scanner.DecodeInfo;
-import com.seuic.scanner.DecodeInfoCallBack;
-import com.seuic.scanner.ScannerFactory;
-import com.seuic.scanner.Scanner;
-import com.seuic.sleduhf.UhfDevice;
 
+import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 
-public class MainActivity extends AppCompatActivity implements DecodeInfoCallBack {
+public class MainActivity extends AppCompatActivity{
 
     private DataBundle mDataBundle;
     private EditText ipPort;
     private TextView mTextView;
     private Button btnRFID, btnQR;
 
-    private Scanner scanner = null;
-    private UhfDevice uhfDevice = null;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        initModel();
-
-        scanner = ScannerFactory.getScanner(this);
-        scanner.open();
-        scanner.setDecodeInfoCallBack(this);
-
-        uhfDevice = UhfDevice.getInstance(this);
-      //  uhfDevice.registerUhfCallback(uhfCallback);
 
         mTextView = this.findViewById(R.id.textView);
         ipPort = this.findViewById(R.id.editTextTextIP);
@@ -52,72 +40,56 @@ public class MainActivity extends AppCompatActivity implements DecodeInfoCallBac
         btnQR = this.findViewById(R.id.buttonQR);
 
         btnRFID.setOnClickListener(v -> {
-            startSoapLoader(DeviceType.RFID);
-            Log.i("widgetDemo", "button1 被用户点击了。");
+            mDataBundle.setIpProt(ipPort.getText().toString());
         });
 
         btnQR.setOnClickListener(v -> {
-            startSoapLoader(DeviceType.QR);
-            Log.i("widgetDemo", "button1 被用户点击了。");
+            mDataBundle.setIpProt(ipPort.getText().toString());
         });
 
+        registerModel();
         registerEventBus();
-    }
-
-    @Override
-    public void onDecodeComplete(final DecodeInfo decodeInfo) {
-        String strDecoder = decodeInfo.barcode;
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
         unregisterEventBus();
-
-        if (scanner != null) {
-            scanner.close();
-            scanner.setDecodeInfoCallBack(null);
-            scanner = null;
-        }
+        unregisterModel();
     }
 
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        //影响扫码
+        return mDataBundle.onKeyDown(keyCode, event) ? true : super.onKeyDown(keyCode, event);
+    }
 
-    public void initModel() {
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+        //影响扫码
+        return  mDataBundle.onKeyUp(keyCode, event) ? true : super.onKeyUp(keyCode, event);
+    }
+
+    public void registerModel() {
         mDataBundle = new DataBundle(getApplicationContext());
+    }
+
+    public void unregisterModel() {
+        if (mDataBundle != null) {
+            mDataBundle.unregister();
+        }
     }
 
     private void registerEventBus() {
         EventBusUtils.ensureRegister(mDataBundle.getEventBus(), this);
+        EventBusUtils.ensureRegister(EventBus.getDefault(), this);
     }
 
     private void unregisterEventBus() {
         EventBusUtils.ensureUnregister(mDataBundle.getEventBus(), this);
+        EventBusUtils.ensureUnregister(EventBus.getDefault(), this);
     }
 
-
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onRecvWSEvent(RecvWSEvent recvWSEvent) {
-        Log.i("aillean", "MainActivity: " + recvWSEvent.getStrRead());
-        udpateTextView(recvWSEvent.getStrRead());
-    }
-
-    private void startSoapLoader(DeviceType emType) {
-        NetworkTestAction networkTestAction =
-                new NetworkTestAction(getApplicationContext(), mDataBundle.getCloudDataManager());
-        networkTestAction.setIpPort(ipPort.getText().toString());
-        networkTestAction.setEmType(emType);
-
-        if(emType==DeviceType.RFID)
-        {
-            networkTestAction.setStrData("QR1");
-        }
-        if(emType==DeviceType.QR)
-        {
-            networkTestAction.setStrData("aa");
-        }
-
-        networkTestAction.execute();
-    }
 
     public void udpateTextView(String value) {
         if (TextUtils.isEmpty(value)) {
@@ -125,4 +97,39 @@ public class MainActivity extends AppCompatActivity implements DecodeInfoCallBac
         }
         mTextView.setText(value);
     }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onRecvWSEvent(RecvWSEvent recvWSEvent) {
+        Log.i("aillean", "MainActivity: onRecvWSEvent: " + recvWSEvent.getStrRead());
+        udpateTextView(recvWSEvent.getStrRead());
+    }
+
+    //显示rfid的相关提示信息.
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onRfidConnectInfoEvent(RfidConnectInfoEvent event) {
+        Log.i("aillean", "MainActivity: RfidConnectInfoEvent: " + event.getMessage());
+        udpateTextView("rfid,请求返回: " + event.getMessage());
+    }
+
+    //获取到rfid的tag后,准备读取数据
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onRfidTagEvent(RfidTagEvent event) {
+        Log.i("aillean", "MainActivity: onRfidTagEvent: " + event.getRfidTag());
+        udpateTextView("当前的rfid tag: " + event.getRfidTag());
+    }
+
+    //Rfid事件请求, 打开,读,写等.
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onRfidActionEvent(RfidActionEvent event) {
+        Log.i("aillean", "MainActivity: RfidActionEvent");
+        mDataBundle.startRfidAction(mDataBundle.getRfidDeviceModel(), event.getRfidState());
+    }
+
+    //rfid与 qr码向服务端请求数据
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onNetworkDataActionEvent(NetworkDataActionEvent event) {
+        Log.i("aillean", "MainActivity: NetworkDataActionEvent");
+        mDataBundle.startNetworkDataAction(event.getReadCode(), event.getDeviceType());
+    }
+
 }
