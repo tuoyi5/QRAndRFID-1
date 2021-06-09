@@ -16,6 +16,7 @@ import android.widget.TextView;
 import com.aillean.common.eventbus.QRReadCodeEvent;
 import com.aillean.common.eventbus.RecvWSEvent;
 import com.aillean.common.eventbus.RfidReadCodeEvent;
+import com.aillean.common.eventbus.RfidReadStopEvent;
 import com.aillean.common.model.DataBundle;
 import com.aillean.tool.DeviceType;
 import com.aillean.utils.EventBusUtils;
@@ -152,6 +153,11 @@ public class MainActivity extends AppCompatActivity {
 
             mDataBundle.startNetworkDataAction(ipPort.getText().toString(), event.getReadCode(), event.getDeviceType());
         }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onRfidReadStopEvent(RfidReadStopEvent event) {
+        mDataBundle.stopQrOrRfid(DeviceType.RFID);
     }
 
 }

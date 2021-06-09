@@ -34,6 +34,11 @@ public class RfidRequest extends BaseDataRequest {
 
     @Override
     public void execute() throws Exception {
+        mRfidDeviceModel.startSearchTag();
+       // getReadTags();
+    }
+
+    public void getReadTags() {
         List<EPC> listOfRead = mRfidDeviceModel.readTags();
         for (EPC item : listOfRead) {
             String id = item.getId();
@@ -42,7 +47,6 @@ public class RfidRequest extends BaseDataRequest {
                 mapOfRead.put(id, id);
             }
         }
-
         StringBuffer strBuffer = new StringBuffer();
         for (Map.Entry<String, String> entry : mapOfRead.entrySet()) {
             strBuffer.append(entry.getKey());

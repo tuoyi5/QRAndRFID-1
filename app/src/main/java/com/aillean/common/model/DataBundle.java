@@ -20,7 +20,8 @@ public class DataBundle {
     private CloudDataManager mCloudDataManager;
     private LocalDataManager mLocalDataManager;
     private EventBus eventBus;
-    private DeviceType mDeviceType = DeviceType.RFID;
+    private DeviceType selectedDeviceType = DeviceType.RFID;
+    private DeviceType currentlyDeviceType = selectedDeviceType;
 
     private QrDeviceModel mQrDeviceModel;
     private RfidDeviceModel mRfidDeviceModel;
@@ -68,10 +69,9 @@ public class DataBundle {
     }
 
 
-    public void setDeviceType(DeviceType deviceType) {
-        mDeviceType = deviceType;
+    public void setSelectedDeviceType(DeviceType selectedDeviceType) {
+        this.selectedDeviceType = selectedDeviceType;
     }
-
 
     public void startNetworkDataAction(String ipProt,String code, DeviceType type) {
         NetworkDataAction action = new NetworkDataAction<>(appContext, mCloudDataManager)
@@ -79,10 +79,9 @@ public class DataBundle {
         action.execute();
     }
 
-    private void startQrOrRfid() {
+    private void startQrOrRfid(DeviceType mDeviceType) {
         switch (mDeviceType) {
             case RFID:
-                mRfidDeviceModel.startSearchTag();
                 RfidAction action = new RfidAction<>(appContext, mLocalDataManager)
                         .setRfidDeviceModel(mRfidDeviceModel);
                 action.execute();
@@ -91,9 +90,10 @@ public class DataBundle {
                 mQrDeviceModel.startScan();
                 break;
         }
+        currentlyDeviceType = mDeviceType;
     }
 
-    private void stopQrOrRfid() {
+    public void stopQrOrRfid(DeviceType mDeviceType) {
         switch (mDeviceType) {
             case RFID:
                 mRfidDeviceModel.stopSearchTag();
@@ -108,7 +108,7 @@ public class DataBundle {
         if (!entityKeys.contains(keyCode)) {
             return false;
         }
-        startQrOrRfid();
+        startQrOrRfid(selectedDeviceType);
         return true;
     }
 
@@ -117,7 +117,7 @@ public class DataBundle {
             return false;
         }
 
-        stopQrOrRfid();
+        stopQrOrRfid(currentlyDeviceType);
         return true;
     }
 
