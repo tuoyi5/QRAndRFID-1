@@ -33,6 +33,7 @@ public class SoapLoader {
     public ParamBean Loader() {
         Log.i("aillean", "SoapLoader.Loader()");
         HttpTransportSE httpTransportSE = new HttpTransportSE(ipPort);
+        httpTransportSE.setReadTimeout(1000 * 10);
         //使用SOAP1.1协议创建Envelop对象，根据服务端WebService的版本号设置SOAP协议的版本号
         SoapSerializationEnvelope envelope = new SoapSerializationEnvelope(SoapEnvelope.VER11);
         //实例化SoapObject对象，第一个参数表示命名空间，第二个参数表示要调用的WebService方法名
@@ -42,7 +43,8 @@ public class SoapLoader {
         paramBean.setType(emType.getName());
         paramBean.setParam(strData);
 
-        soapObject.addProperty("pSend", JSONObject.toJSONString(paramBean));
+        String strSend = JSONObject.toJSONString(paramBean);
+        soapObject.addProperty("pSend", strSend);
         envelope.bodyOut = soapObject;
         envelope.dotNet = true;
         try {

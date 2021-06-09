@@ -1,79 +1,53 @@
 package com.aillean.common.request;
 
-import android.text.TextUtils;
+import android.util.Log;
 
-import com.aillean.common.eventbus.RfidActionEvent;
 import com.aillean.common.manager.DataManager;
 import com.aillean.common.manager.LocalDataManager;
 import com.aillean.devices.RfidDeviceModel;
-import com.aillean.devices.rfid.utils.RfidState;
-import com.aillean.devices.rfid.utils.RfidTag;
+import com.seuic.uhf.EPC;
 
-import org.greenrobot.eventbus.EventBus;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class RfidRequest extends BaseDataRequest {
 
-    private RfidState mRfidState;
     private RfidDeviceModel mRfidDeviceModel;
 
-    String readRfidTag;
-    boolean wriftRfid;
-    boolean isOpen = false;
+    private Map<String, String> mapOfRead = new HashMap<String, String>();
+
+    public String getReadRfidTag() {
+        return readRfidTag;
+    }
+
+    private String readRfidTag;
 
     public <T extends DataManager> RfidRequest(LocalDataManager dataManager) {
         super(dataManager);
     }
-
-    public RfidRequest setRfidState(RfidState rfidState) {
-        mRfidState = rfidState;
-        return this;
-    }
-
 
     public RfidRequest setRfidDeviceModel(RfidDeviceModel rfidDeviceModel) {
         mRfidDeviceModel = rfidDeviceModel;
         return this;
     }
 
-    public String getReadRfidTag() {
-        return readRfidTag;
-    }
-
-    public boolean isWriftRfid() {
-        return wriftRfid;
-    }
-
-    public boolean isOpen() {
-        return isOpen;
-    }
-
     @Override
     public void execute() throws Exception {
-        switch (mRfidState) {
-            case OPEN:
-                String btMac = mRfidDeviceModel.open();
-                isOpen = !TextUtils.isEmpty(btMac);
-                if (isOpen) {
-                    poshEvent(RfidState.START_SEARCH);
-                }
-                break;
-            case START_SEARCH:
-                mRfidDeviceModel.startSearchTag();
-                poshEvent(RfidState.STOP_SEARCH);
-                break;
-            case STOP_SEARCH:
-                mRfidDeviceModel.stopSearchTag();
-                break;
-            case READ:
-                readRfidTag= mRfidDeviceModel.readTag();
-                break;
-            case WRITE:
-                wriftRfid = mRfidDeviceModel.writeTag();
-                break;
+        List<EPC> listOfRead = mRfidDeviceModel.readTags();
+        for (EPC item : listOfRead) {
+            String id = item.getId();
+            if (id != null && !"".equals(id)) {
+                //当放开key 不再投递，未读到数据，接着投递读请求。
+                mapOfRead.put(id, id);
+            }
         }
-    }
 
-    private void poshEvent(RfidState rfidState) {
-        EventBus.getDefault().post(new RfidActionEvent(rfidState));
+        StringBuffer strBuffer = new StringBuffer();
+        for (Map.Entry<String, String> entry : mapOfRead.entrySet()) {
+            strBuffer.append(entry.getKey());
+            strBuffer.append("\r\n");
+        }
+        readRfidTag = strBuffer.toString();
     }
 }

@@ -2,19 +2,20 @@ package com.aillean.common.eventbus;
 
 import com.aillean.tool.DeviceType;
 
-public class RfidReadCodeEvent {
+public class QRReadCodeEvent {
+    private DeviceType mDeviceType = DeviceType.QR;
     private String readCode;
-    private DeviceType deviceType = DeviceType.RFID;
+
 
     public DeviceType getDeviceType() {
-        return deviceType;
+        return mDeviceType;
     }
 
     public String getReadCode() {
         return readCode;
     }
 
-    public RfidReadCodeEvent setReadCode(String readCode) {
+    public QRReadCodeEvent setReadCode(String readCode) {
         this.readCode = readCode;
         return this;
     }

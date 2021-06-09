@@ -21,7 +21,8 @@
         android:supportsRtl="true"
         android:testOnly="true"
         android:required="false"
-        android:theme="@style/Theme.MyApplication">
+        android:theme="@style/Theme.MyApplication"
+        android:usesCleartextTraffic="true">
 
         <uses-library android:name="android.scanner.library"
             android:required="false"/>

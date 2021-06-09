@@ -51,14 +51,6 @@
         </RadioGroup>
     </LinearLayout>
 
-    <Button
-        android:id="@+id/testButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="10dp"
-        android:text="StartTest"
-        />
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -73,7 +65,7 @@
             android:background="@drawable/background_selected_text"
             android:gravity="center"
             android:padding="10dp"
-            android:text="dd"
+            android:text="Chek QR Or RFID Press Trigger"
             android:textColor="@color/black"
             android:textSize="25sp"></TextView>
     </LinearLayout>

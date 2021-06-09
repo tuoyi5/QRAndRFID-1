@@ -1,16 +1,13 @@
 package com.aillean.common.model;
 
 import android.content.Context;
-import android.view.KeyEvent;
 
 import com.aillean.common.action.NetworkDataAction;
-import com.aillean.common.action.QrAction;
 import com.aillean.common.action.RfidAction;
 import com.aillean.common.manager.CloudDataManager;
 import com.aillean.common.manager.LocalDataManager;
 import com.aillean.devices.QrDeviceModel;
 import com.aillean.devices.RfidDeviceModel;
-import com.aillean.devices.rfid.utils.RfidState;
 import com.aillean.tool.DeviceType;
 
 import org.greenrobot.eventbus.EventBus;
@@ -19,147 +16,134 @@ import java.util.ArrayList;
 
 public class DataBundle {
 
-	private Context appContext;
-	private CloudDataManager mCloudDataManager;
-	private LocalDataManager mLocalDataManager;
-	private EventBus eventBus;
-	private String ipProt;
-	private DeviceType mDeviceType = DeviceType.RFID;
+    private Context appContext;
+    private CloudDataManager mCloudDataManager;
+    private LocalDataManager mLocalDataManager;
+    private EventBus eventBus;
+    private DeviceType mDeviceType = DeviceType.RFID;
 
-	private QrDeviceModel mQrDeviceModel;
-	private RfidDeviceModel mRfidDeviceModel;
+    private QrDeviceModel mQrDeviceModel;
+    private RfidDeviceModel mRfidDeviceModel;
 
-	private ArrayList<Integer> entityKeys = new ArrayList<>();
+    private ArrayList<Integer> entityKeys = new ArrayList<>();
 
-	public DataBundle(Context appContext) {
-		this.appContext = appContext;
-		eventBus = new EventBus();
-		mCloudDataManager = new CloudDataManager(eventBus);
-		mLocalDataManager = new LocalDataManager(eventBus);
-		mQrDeviceModel = new QrDeviceModel(appContext, eventBus);
-		mRfidDeviceModel = new RfidDeviceModel(appContext, eventBus);
-		register();
-		initEntityKeys();
-	}
+    public DataBundle(Context appContext) {
+        this.appContext = appContext;
+        eventBus = new EventBus();
+        mCloudDataManager = new CloudDataManager(eventBus);
+        mLocalDataManager = new LocalDataManager(eventBus);
+        mQrDeviceModel = new QrDeviceModel(appContext, eventBus);
+        mRfidDeviceModel = new RfidDeviceModel(appContext, eventBus);
+        register();
+        initEntityKeys();
+    }
 
-	public void initEntityKeys() {
-		entityKeys.add(249);
-		entityKeys.add(250);
-	}
+    public void initEntityKeys() {
+        entityKeys.add(249);
+        entityKeys.add(250);
+    }
 
-	public Context getAppContext() {
-		return appContext;
-	}
+    public Context getAppContext() {
+        return appContext;
+    }
 
-	public void setAppContext(Context appContext) {
-		this.appContext = appContext;
-	}
+    public void setAppContext(Context appContext) {
+        this.appContext = appContext;
+    }
 
-	public CloudDataManager getCloudDataManager() {
-		return mCloudDataManager;
-	}
+    public CloudDataManager getCloudDataManager() {
+        return mCloudDataManager;
+    }
 
-	public void setCloudDataManager(CloudDataManager cloudDataManager) {
-		mCloudDataManager = cloudDataManager;
-	}
+    public void setCloudDataManager(CloudDataManager cloudDataManager) {
+        mCloudDataManager = cloudDataManager;
+    }
 
-	public EventBus getEventBus() {
-		return eventBus;
-	}
+    public EventBus getEventBus() {
+        return eventBus;
+    }
 
-	public void setEventBus(EventBus eventBus) {
-		this.eventBus = eventBus;
-	}
+    public void setEventBus(EventBus eventBus) {
+        this.eventBus = eventBus;
+    }
 
-	public String getIpProt() {
-		return ipProt;
-	}
 
-	public void setIpProt(String ipProt) {
-		this.ipProt = ipProt;
-	}
+    public void setDeviceType(DeviceType deviceType) {
+        mDeviceType = deviceType;
+    }
 
-	public DeviceType getDeviceType() {
-		return mDeviceType;
-	}
 
-	public void setDeviceType(DeviceType deviceType) {
-		mDeviceType = deviceType;
-	}
+    public void startNetworkDataAction(String ipProt,String code, DeviceType type) {
+        NetworkDataAction action = new NetworkDataAction<>(appContext, mCloudDataManager)
+                .setCode(code).setDeviceType(type).setIpPort(ipProt);
+        action.execute();
+    }
 
-	public void startQrAction(String qrCode) {
-		QrAction action = new QrAction(appContext, mLocalDataManager);
-		action.execute();
-	}
+    private void startQrOrRfid() {
+        switch (mDeviceType) {
+            case RFID:
+                mRfidDeviceModel.startSearchTag();
+                RfidAction action = new RfidAction<>(appContext, mLocalDataManager)
+                        .setRfidDeviceModel(mRfidDeviceModel);
+                action.execute();
+                break;
+            case QR:
+                mQrDeviceModel.startScan();
+                break;
+        }
+    }
 
-	public void startRfidAction(RfidDeviceModel rfidDeviceModel, RfidState rfidState) {
-		RfidAction action = new RfidAction<>(appContext, mLocalDataManager);
-		action.setRfidDeviceModel(rfidDeviceModel).setRfidState(rfidState);
-		action.execute();
-	}
+    private void stopQrOrRfid() {
+        switch (mDeviceType) {
+            case RFID:
+                mRfidDeviceModel.stopSearchTag();
+                break;
+            case QR:
+                mQrDeviceModel.stopScan();
+                break;
+        }
+    }
 
-	public void startNetworkDataAction(String code, DeviceType type) {
-		NetworkDataAction action = new NetworkDataAction<>(appContext, mCloudDataManager)
-			.setCode(code).setDeviceType(type).setIpPort(ipProt);
-		action.execute();
-	}
+    public boolean onKeyDown(int keyCode) {
+        if (!entityKeys.contains(keyCode)) {
+            return false;
+        }
+        startQrOrRfid();
+        return true;
+    }
 
-	public void startQrOrRfid() {
-		switch (mDeviceType) {
-			case RFID:
-				mRfidDeviceModel.open();
-				break;
-			case QR:
-				mQrDeviceModel.startScan();
-				break;
-		}
-	}
+    public boolean onKeyUp(int keyCode) {
+        if (!entityKeys.contains(keyCode)) {
+            return false;
+        }
 
-	public void stopQrOrRfid() {
-		mRfidDeviceModel.close();
-		mQrDeviceModel.stopScan();
-	}
+        stopQrOrRfid();
+        return true;
+    }
 
-	public boolean onKeyDown(int keyCode, KeyEvent event) {
-		if (!entityKeys.contains(keyCode)) {
-			return false;
-		}
-		startQrOrRfid();
-		return true;
-	}
+    public void register() {
+        mQrDeviceModel.registerScannerFactory(this.appContext);
+        mRfidDeviceModel.registerUhfDevice();
+    }
 
-	public boolean onKeyUp(int keyCode, KeyEvent event) {
-		if (!entityKeys.contains(keyCode)) {
-			return false;
-		}
+    public void unregister() {
+        mQrDeviceModel.unregisterScannerFactory(this.appContext);
+        mRfidDeviceModel.unregisterUhfDevice();
+    }
 
-		stopQrOrRfid();
-		return true;
-	}
+    public QrDeviceModel getQrDeviceModel() {
+        return mQrDeviceModel;
+    }
 
-	public void register() {
-		mQrDeviceModel.registerScannerFactory();
-		mRfidDeviceModel.init();
-	}
+    public void setQrDeviceModel(QrDeviceModel qrDeviceModel) {
+        mQrDeviceModel = qrDeviceModel;
+    }
 
-	public void unregister() {
-		mQrDeviceModel.unregisterScannerFactory();
-		mRfidDeviceModel.unregisterUhfDeviceCallback();
-	}
+    public RfidDeviceModel getRfidDeviceModel() {
+        return mRfidDeviceModel;
+    }
 
-	public QrDeviceModel getQrDeviceModel() {
-		return mQrDeviceModel;
-	}
-
-	public void setQrDeviceModel(QrDeviceModel qrDeviceModel) {
-		mQrDeviceModel = qrDeviceModel;
-	}
-
-	public RfidDeviceModel getRfidDeviceModel() {
-		return mRfidDeviceModel;
-	}
-
-	public void setRfidDeviceModel(RfidDeviceModel rfidDeviceModel) {
-		mRfidDeviceModel = rfidDeviceModel;
-	}
+    public void setRfidDeviceModel(RfidDeviceModel rfidDeviceModel) {
+        mRfidDeviceModel = rfidDeviceModel;
+    }
 }
